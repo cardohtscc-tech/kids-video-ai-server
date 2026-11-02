@@ -1,0 +1,14 @@
+
+{
+  "name": "kids-video-ai-server",
+  "version": "1.0.0",
+  "description": "Servidor de Kids Video AI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5"
+  }
+}
