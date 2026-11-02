@@ -70,4 +70,30 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Kids Video AI funcionando en el puerto ${PORT}`);
 });
+const RunwayML = require("@runwayml/sdk");
 
+const runway = new RunwayML({
+  apiKey: process.env.RUNWAYML_API_SECRET
+});
+
+app.post("/api/runway-test", async (req, res) => {
+  try {
+    const task = await runway.textToVideo.create({
+      model: "gen4.5",
+      promptText: req.body.prompt,
+      ratio: "1280:720",
+      duration: 5
+    }).waitForTaskOutput();
+
+    res.json({
+      success: true,
+      videoUrl: task.output[0]
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: "No se pudo generar el video."
+    });
+  }
+});
