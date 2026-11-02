@@ -97,3 +97,59 @@ app.post("/api/runway-test", async (req, res) => {
     });
   }
 });
+
+const { default: RunwayML } = await import("@runwayml/sdk");
+
+app.use(express.json());
+
+app.post("/api/runway-video", async (req, res) => {
+  try {
+    const { title, story, characters, ratio } = req.body;
+
+    if (!title || !story) {
+      return res.status(400).json({
+        error: "Faltan el título o la historia."
+      });
+    }
+
+    if (!process.env.RUNWAYML_API_SECRET) {
+      return res.status(500).json({
+        error: "Configura RUNWAYML_API_SECRET en Render."
+      });
+    }
+
+    const runway = new RunwayML({
+      apiKey: process.env.RUNWAYML_API_SECRET
+    });
+
+    const prompt = [
+      "Create a family-friendly animated video.",
+      "Story title: " + title,
+      "Story: " + story,
+      "Characters: " + (characters || "Invent suitable original characters."),
+      "Keep the visual style consistent."
+    ].join("\n");
+
+    const task = await runway.textToVideo.create({
+      model: "gen4.5",
+      promptText: prompt.slice(0, 1000),
+      ratio: ratio === "720:1280" ? "720:1280" : "1280:720",
+      duration: 5
+    }).waitForTaskOutput();
+
+    if (!task.output || !task.output[0]) {
+      throw new Error("Runway no devolvió un video.");
+    }
+
+    res.json({
+      success: true,
+      videoUrl: task.output[0]
+    });
+
+  } catch (error) {
+    console.error("Runway error:", error);
+    res.status(500).json({
+      error: "Falló la generación de video."
+    });
+  }
+});
